@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,15 +19,12 @@ type MY map[string]string
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("用法: my go [-n|--no] <package-name> [package-name2] ...")
-		fmt.Println("示例: my go gorm")
-		fmt.Println("示例: my go gorm gin fiber")
-		fmt.Println("示例: my go -n gorm  (只显示命令，不执行)")
+		fmt.Println("用法: my go [-n] <package-name>...")
 		os.Exit(1)
 	}
 
 	if os.Args[1] != "go" {
-		fmt.Println("用法: my go [-n|--no] <package-name> [package-name2] ...")
+		fmt.Println("用法: my go [-n] <package-name>...")
 		os.Exit(1)
 	}
 
@@ -44,14 +42,13 @@ func main() {
 	}
 
 	if len(packageNames) == 0 {
-		fmt.Println("错误: 至少需要一个包名")
+		fmt.Println("需要包名")
 		os.Exit(1)
 	}
 
-	// 获取映射文件
 	my, err := fetch()
 	if err != nil {
-		fmt.Printf("错误: 无法获取包映射信息: %v\n", err)
+		fmt.Printf("获取映射失败: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -61,46 +58,32 @@ func main() {
 
 	for _, packageName := range packageNames {
 		if packageName == "" {
-			fmt.Println("警告: 跳过空的包名")
 			continue
 		}
 
-		// 查找包路径
 		importPath, exists := my[packageName]
 		if !exists {
-			fmt.Printf("错误: 未找到包 '%s' 的映射\n", packageName)
+			fmt.Printf("%s: 未找到\n", packageName)
 			failedPackages = append(failedPackages, packageName)
 			continue
 		}
 
-		// 执行 go get 命令
-		fmt.Printf("正在安装: %s -> %s\n", packageName, importPath)
-		if err := executeGoGet(importPath, noExecute); err != nil {
-			fmt.Printf("错误: 执行 go get 失败 (%s): %v\n", packageName, err)
+		if err := goGet(importPath, noExecute); err != nil {
+			fmt.Printf("%s: 失败\n", packageName)
 			failedPackages = append(failedPackages, packageName)
 			continue
 		}
 
-		if !noExecute {
-			fmt.Printf("✓ 成功安装 %s\n", importPath)
-		}
 		successCount++
 	}
 
-	// 显示总结
 	if len(failedPackages) > 0 {
-		fmt.Printf("\n失败: %d 个包安装失败\n", len(failedPackages))
 		if successCount == 0 {
-			fmt.Println("可用的包:")
 			for name := range my {
-				fmt.Printf("  - %s\n", name)
+				fmt.Println(name)
 			}
 		}
 		os.Exit(1)
-	}
-
-	if successCount > 0 {
-		fmt.Printf("\n✓ 成功安装 %d 个包\n", successCount)
 	}
 }
 
@@ -128,10 +111,10 @@ func fetch() (MY, error) {
 	return mapping, nil
 }
 
-func executeGoGet(importPath string, noExecute bool) error {
-	fmt.Printf(">>> go get %s\n", importPath)
+func goGet(importPath string, noExecute bool) error {
+	fmt.Printf("go get %s\n", importPath)
 	if noExecute {
-		return nil // 只输出命令，不执行
+		return errors.New("已忽略")
 	}
 	cmd := exec.Command("go", "get", importPath)
 	cmd.Stdout = os.Stdout
