@@ -1,9 +1,7 @@
-.PHONY:install
+.PHONY:install my
 .ONESHELL:
 
-SRC := $(wildcard cmd/*.go)
-
-my:$(SRC)
+my:
 	go build ./cmd/my  
 
 install:
