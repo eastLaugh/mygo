@@ -63,7 +63,7 @@ func processPackages(my MY, packageNames []string) {
 			continue
 		}
 
-		if err := goGet(pkg); errors.Is(err, IgnoreError{}) {
+		if err := goGet(pkg); errors.As(err, &IgnoreError{}) {
 			println(err.Error())
 		} else if err != nil {
 			println(err.Error())
