@@ -41,12 +41,9 @@ my go --no gorm gin
 my go [-n|--no] <package-name>...
 ```
 
-- `-n` 或 `--no`: 只输出 `go get` 命令，不实际执行
-- `<package-name>`: 包别名，可以指定多个
-
 ## 包映射配置
 
-包映射配置存储在 GitHub 仓库的 `my.toml` 文件中，格式如下：
+包映射配置存储在 GitHub 仓库的 `my.toml` 文件中，以简单 KV 格式存储。
 
 ```toml
 gorm = "gorm.io/gorm"
@@ -61,8 +58,8 @@ mygo/
 ├── cmd/
 │   └── my/
 │       └── main.go      # 主程序
-├── my.toml              # 包映射配置（示例）
-├── Makefile             # 构建脚本
-├── go.mod               # Go 模块定义
-└── README.md            # 本文件
+├── my.toml              # 包映射配置
+├── Makefile             
+├── go.mod               
+└── README.md            
 ```
